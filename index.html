@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Rajeevan Amirtharajah Dept. of Electrical and Computer Engineering University of California, Davis" />
+  <title>EEC 214 Fall 2026 Project #2: Ladder 3:1 Converter Design</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title"><strong><u>EEC 214 Fall 2026 Project
+#2:</u></strong><br />
+<strong>Ladder 3:1 Converter Design</strong></h1>
+<p class="author">Rajeevan Amirtharajah<br />
+Dept. of Electrical and Computer Engineering<br />
+University of California, Davis</p>
+<p class="date">Issued: October 24, 2026<br />
+Due: November 13, 2026, 11:59 PM via Canvas.</p>
+</header>
+<p><span><strong>Reference:</strong></span> Gray, Hurst, Lewis,
+Meyer <span class="citation" data-cites="graymeyer-book4"></span>. Any
+edition is fine.</p>
+<p>The following device parameters may be helpful for any analytical
+design in this assignment:</p>
+<p><span><strong>NMOS Transistor Parameters:</strong></span></p>
+<ul>
+<li><p>Threshold Voltage
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mrow><mi>T</mi><mi>N</mi></mrow></msub><mo>=</mo><mn>349.7</mn></mrow><annotation encoding="application/x-tex">V_{TN} = 349.7</annotation></semantics></math>
+mV</p></li>
+<li><p>Min.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo>=</mo><mn>270</mn></mrow><annotation encoding="application/x-tex">W = 270</annotation></semantics></math>
+nm</p></li>
+<li><p>Min.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>=</mo><mn>180</mn></mrow><annotation encoding="application/x-tex">L = 180</annotation></semantics></math>
+nm</p></li>
+<li><p>Process Transconductance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><msub><mi>C</mi><mrow><mi>o</mi><mi>x</mi></mrow></msub><mo>=</mo><mn>104.7</mn><mi>μ</mi></mrow><annotation encoding="application/x-tex">\mu C_{ox} = 104.7 \mu</annotation></semantics></math>A/V<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mn>2</mn></msup><annotation encoding="application/x-tex">^{2}</annotation></semantics></math></p></li>
+<li><p>Body Effect Parameter
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi><mo>=</mo><mn>0.297</mn></mrow><annotation encoding="application/x-tex">\gamma = 0.297</annotation></semantics></math>
+V/V<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mrow><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msup><annotation encoding="application/x-tex">^{1/2}</annotation></semantics></math></p></li>
+<li><p>Channel Length Modulation Parameter
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>0.115</mn></mrow><annotation encoding="application/x-tex">\lambda = 0.115</annotation></semantics></math>
+V<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><annotation encoding="application/x-tex">^{-1}</annotation></semantics></math></p></li>
+<li><p>Gate Oxide Capacitance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>o</mi><mi>x</mi></mrow></msub><mo>=</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">C_{ox} = 10</annotation></semantics></math>
+fF/<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>m<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mn>2</mn></msup><annotation encoding="application/x-tex">^{2}</annotation></semantics></math></p></li>
+<li><p>Fermi Level
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mn>2</mn><msub><mi>ϕ</mi><mi>F</mi></msub><mo stretchy="false" form="prefix">|</mo><mo>=</mo><mn>0.6</mn></mrow><annotation encoding="application/x-tex">|2\phi_{F}| = 0.6</annotation></semantics></math>
+V</p></li>
+</ul>
+<p><span><strong>PMOS Transistor Parameters:</strong></span></p>
+<ul>
+<li><p>Threshold Voltage
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mrow><mi>T</mi><mi>P</mi></mrow></msub><mo>=</mo><mi>−</mi><mn>269.5</mn></mrow><annotation encoding="application/x-tex">V_{TP} = -269.5</annotation></semantics></math>
+mV</p></li>
+<li><p>Min.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo>=</mo><mn>270</mn></mrow><annotation encoding="application/x-tex">W = 270</annotation></semantics></math>
+nm</p></li>
+<li><p>Min.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>=</mo><mn>180</mn></mrow><annotation encoding="application/x-tex">L = 180</annotation></semantics></math>
+nm</p></li>
+<li><p>Process Transconductance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><msub><mi>C</mi><mrow><mi>o</mi><mi>x</mi></mrow></msub><mo>=</mo><mn>38.3</mn><mi>μ</mi></mrow><annotation encoding="application/x-tex">\mu C_{ox} = 38.3 \mu</annotation></semantics></math>A/V<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mn>2</mn></msup><annotation encoding="application/x-tex">^{2}</annotation></semantics></math></p></li>
+<li><p>Body Effect Parameter
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi><mo>=</mo><mn>0.066</mn></mrow><annotation encoding="application/x-tex">\gamma = 0.066</annotation></semantics></math>
+V/V<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mrow><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msup><annotation encoding="application/x-tex">^{1/2}</annotation></semantics></math></p></li>
+<li><p>Channel Length Modulation Parameter
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>0.188</mn></mrow><annotation encoding="application/x-tex">\lambda = 0.188</annotation></semantics></math>
+V<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><annotation encoding="application/x-tex">^{-1}</annotation></semantics></math></p></li>
+<li><p>Gate Oxide Capacitance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>o</mi><mi>x</mi></mrow></msub><mo>=</mo><mn>10.7</mn></mrow><annotation encoding="application/x-tex">C_{ox} = 10.7</annotation></semantics></math>
+fF/<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>m<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mn>2</mn></msup><annotation encoding="application/x-tex">^{2}</annotation></semantics></math></p></li>
+<li><p>Fermi Level
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mn>2</mn><msub><mi>ϕ</mi><mi>F</mi></msub><mo stretchy="false" form="prefix">|</mo><mo>=</mo><mn>0.6</mn></mrow><annotation encoding="application/x-tex">|2\phi_{F}| = 0.6</annotation></semantics></math>
+V</p></li>
+</ul>
+<p>Note that the values above are derived from the Predictive Technology
+Model <span class="citation" data-cites="ptm-web zhao-ptm-ted06"></span>
+180 nm CMOS bulk process used with the Cadence Virtuoso Analog Design
+Environment (ADE) tool. Similar values may be used for circuit analysis
+with the 180 nm CMOS models (<span><code>TSMC180nmN</code></span> and
+<span><code>TSMC180nmP</code></span>) in the OrCAD PSpice library.</p>
+<h4 id="simulation">Simulation</h4>
+<p>During remote instruction, multiple schematic capture and simulation
+options for this project are acceptable, with (1) Cadence Virtuoso
+running remotely through VNC on college or ECE department workstations
+or (2) OrCAD PSpice running locally on your machine the two options that
+are officially supported. Other options (PSpice run remotely, LTSpice
+run locally) are possible but are not supported. Please contact the
+instructor if you have any questions regarding simulation options.
+Tutorials for Cadence Virtuoso and OrCAD PSpice are available on the
+course Canvas site.</p>
+<p>[ps2ans1]</p>
+<h1 id="ladder-31-switched-capacitor-dc-dc-converter">Ladder 3:1
+Switched Capacitor DC-DC Converter</h1>
+<figure id="fig:ladder" data-latex-placement="htp">
+<div class="center">
+<p><img src="./ladder3to1.png" style="width:75.0%"
+alt="Schematic of 3-to-1 switched-capacitor ladder converter with battery input V_IN and capacitor C_OUT with voltage V_OUT in parallel with current source I_LD at the output." /></p>
+</div>
+<figcaption>Ladder 3:1 switched capacitor DC-DC converter.</figcaption>
+</figure>
+<p>Consider the 3:1 switched capacitor ladder converter shown in
+Figure <a href="#fig:ladder" data-reference-type="ref"
+data-reference="fig:ladder">1</a> and analyzed in class. The objective
+of this design project is to choose appropriate values for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math>
+of the NMOS and PMOS power FETs
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mtext mathvariant="normal">SW</mtext><mn>0</mn></msub><annotation encoding="application/x-tex">\textrm{SW}_{0}</annotation></semantics></math>
+through
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mtext mathvariant="normal">SW</mtext><mn>5</mn></msub><annotation encoding="application/x-tex">\textrm{SW}_{5}</annotation></semantics></math>),
+flying capacitors
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>1</mn></msub><annotation encoding="application/x-tex">C_{1}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>2</mn></msub><annotation encoding="application/x-tex">C_{2}</annotation></semantics></math>,
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>3</mn></msub><annotation encoding="application/x-tex">C_{3}</annotation></semantics></math>,
+and output (bypass) capacitance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>O</mi><mi>U</mi><mi>T</mi></mrow></msub><annotation encoding="application/x-tex">C_{OUT}</annotation></semantics></math>.
+You may use a combination of hand analysis, numerical analysis, and
+simulation to choose your component values, but you must satisfy the
+following specifications and verify performance of the circuit in
+simulation. You will also turn in a concise typed/digital report
+discussing your design choices, the simulation results, and explaining
+any discrepancies between specifications, predicted performance, and
+simulated performance.</p>
+<p>The ladder converter should be designed to satisfy the following
+specifications:</p>
+<ul>
+<li><p>Nominal Input Voltage
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mrow><mi>I</mi><mi>N</mi></mrow></msub><mo>=</mo><mn>4.1</mn></mrow><annotation encoding="application/x-tex">V_{IN} = 4.1</annotation></semantics></math>
+V (lithium ion battery)</p></li>
+<li><p>Switching Frequency
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mrow><mi>s</mi><mi>w</mi></mrow></msub><mo>≤</mo><mn>1</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">MHz</mtext></mrow><annotation encoding="application/x-tex">f_{sw} \leq 1\ \textrm{MHz}</annotation></semantics></math></p></li>
+<li><p>Nominal Output Voltage
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mrow><mi>O</mi><mi>U</mi><mi>T</mi></mrow></msub><mo>=</mo><mfrac><msub><mi>V</mi><mrow><mi>I</mi><mi>N</mi></mrow></msub><mn>3</mn></mfrac></mrow><annotation encoding="application/x-tex">V_{OUT} = \frac{V_{IN}}{3}</annotation></semantics></math>
+V</p></li>
+<li><p>Max Output Voltage Error (DC at maximum load current)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>±</mi><mn>100</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">mV</mtext></mrow><annotation encoding="application/x-tex">\pm100\ \textrm{mV}</annotation></semantics></math></p></li>
+<li><p>Max Load Current
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>L</mi><mi>D</mi></mrow></msub><mo>=</mo><mn>150</mn><mspace width="0.222em"></mspace><mi>μ</mi></mrow><annotation encoding="application/x-tex">I_{LD} = 150\ \mu</annotation></semantics></math>A</p></li>
+<li><p>Min Load Current
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>L</mi><mi>D</mi></mrow></msub><mo>=</mo><mn>1</mn><mspace width="0.222em"></mspace><mi>μ</mi></mrow><annotation encoding="application/x-tex">I_{LD} = 1\ \mu</annotation></semantics></math>A</p></li>
+<li><p>Operating Temperature 0 - 85
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mo>∘</mo></msup><annotation encoding="application/x-tex">^{\circ}</annotation></semantics></math>C</p></li>
+<li><p>Max Output Capacitance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>O</mi><mi>U</mi><mi>T</mi></mrow></msub><mo>≤</mo><mn>100</mn></mrow><annotation encoding="application/x-tex">C_{OUT} \leq 100</annotation></semantics></math>
+nF</p></li>
+<li><p>Total Flying Capacitance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>t</mi><mi>o</mi><mi>t</mi></mrow></msub><mo>=</mo><msub><mi>C</mi><mn>1</mn></msub><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><mo>+</mo><msub><mi>C</mi><mn>3</mn></msub><mo>≤</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">C_{tot} = C_{1} + C_{2} + C_{3} \leq 3</annotation></semantics></math>
+nF</p></li>
+<li><p>Total Power FET (Switch) Area
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mrow><mi>t</mi><mi>o</mi><mi>t</mi></mrow></msub><mo>≤</mo><mn>150</mn><mspace width="0.222em"></mspace><mi>μ</mi><mtext mathvariant="normal">m</mtext><mo>⋅</mo><mn>180</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">nm</mtext></mrow><annotation encoding="application/x-tex">A_{tot} \leq 150\ \mu\textrm{m}\cdot 180\ \textrm{nm}</annotation></semantics></math></p></li>
+<li><p>Startup Transient Settling Time
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>&lt;</mo><mn>300</mn><mspace width="0.222em"></mspace><mi>μ</mi><mtext mathvariant="normal">s</mtext></mrow><annotation encoding="application/x-tex">&lt; 300\ \mu\textrm{s}</annotation></semantics></math></p></li>
+</ul>
+<h2 id="sec:floatDriver">Floating Driver</h2>
+<figure id="fig:switchDriver" data-latex-placement="htp">
+<div class="center">
+<p><img src="./floatingSwitchDriver.png" style="width:75.0%"
+alt="Floating switch driver schematic with piecewise-linear voltage source at the input followed by two CMOS inverters driving the output and an ideal voltage source power supply with positive terminal connected to V_DDi and negative terminal to V_SSi." /></p>
+</div>
+<figcaption>Ideal floating switch driver schematic.</figcaption>
+</figure>
+<p>One challenge in implementing switched-capacitor DC-DC converters is
+driving the gates of the FET switches. A sufficient voltage swing must
+be applied to the gate to turn the transistor fully on and off, but the
+swing must also be referenced to the source terminal of the transistor.
+These combined requirements are typically met using <span><em>floating
+drivers</em></span>, which can be realized using CMOS inverters and
+capacitive bootstrap circuits. For this project, you can assume ideal
+floating drivers as shown in Figure <a href="#fig:switchDriver"
+data-reference-type="ref" data-reference="fig:switchDriver">2</a>. The
+driver is modeled as a two-stage CMOS inverter buffer chain with its own
+power supply DC voltage source
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mrow><mi>D</mi><mi>R</mi><mi>V</mi><mi>i</mi></mrow></msub><mo>=</mo><mn>1.8</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">V</mtext></mrow><annotation encoding="application/x-tex">V_{DRVi} = 1.8\ \textrm{V}</annotation></semantics></math>
+and input stimulus source
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>V</mi><mrow><mi>ϕ</mi><mi>j</mi><mi>i</mi></mrow></msub><annotation encoding="application/x-tex">V_{\phi ji}</annotation></semantics></math>,
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
+corresponds to the driver for the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mtext mathvariant="normal">th</mtext></mrow><annotation encoding="application/x-tex">i\textrm{th}</annotation></semantics></math>
+switch
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
+from 0 to 5) and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
+corresponds to the two phases
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϕ</mi><mn>0</mn></mrow><annotation encoding="application/x-tex">\phi0</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϕ</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">\phi1</annotation></semantics></math>.
+Choose appropriate widths and lengths for the transistors to maintain an
+approximate fanout of 4 (FO4) buffer ratio, i.e. once you determine the
+appropriate size
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mi>/</mi><mi>L</mi></mrow><annotation encoding="application/x-tex">W/L</annotation></semantics></math>)
+for each power FET, normalize the power FET area to a minimum-sized
+inverter, then size the output buffer of the floating driver such that
+the power FET presents a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>×</mo></mrow><annotation encoding="application/x-tex">4\times</annotation></semantics></math>
+load. Similarly, the predriver (first inverter) should be sized such
+that the output buffer presents a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>×</mo></mrow><annotation encoding="application/x-tex">4\times</annotation></semantics></math>
+load to it. Assume a minimum-sized inverter has
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mi>P</mi></msub><mi>/</mi><msub><mi>W</mi><mi>N</mi></msub><mo>=</mo><mn>1350</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">nm</mtext><mi>/</mi><mn>450</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">nm</mtext></mrow><annotation encoding="application/x-tex">W_{P}/W_{N} = 1350\ \textrm{nm}/450\ \textrm{nm}</annotation></semantics></math>
+and uses minimum channel lengths. Connect the supply nodes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>V</mi><mrow><mi>D</mi><mi>D</mi><mi>i</mi></mrow></msub><annotation encoding="application/x-tex">V_{DDi}</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>V</mi><mrow><mi>S</mi><mi>S</mi><mi>i</mi></mrow></msub><annotation encoding="application/x-tex">V_{SSi}</annotation></semantics></math>
+to the appropriate nodes in the ladder converter to drive the switches
+effectively.</p>
+<h2 id="sec:design">Design</h2>
+<p>Download the ZIP archive of the design project: <a
+href="https://ucdavis.box.com/s/mb756fk3pbxth72s8pe6j5bzt2e0nf54">DP2.zip</a>.
+Unzip the archive in the directory where you would like to edit and
+simulate the project. Open the project using OrCAD. You should see a
+three-sheet schematic similar to the pages below with the same default
+values for the design parameters filled in. The schematic is set up to
+automatically calculate transistor source/drain areas and perimeters.
+Complete the project by editing all the parameters such as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mrow><mi>n</mi><mi>U</mi><mi>n</mi><mi>i</mi><mi>t</mi></mrow></msub><annotation encoding="application/x-tex">W_{nUnit}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math>,
+etc., setting them equal to your desired values. Include a legible image
+or pdf of your schematic as part of your report (see below).</p>
+<p>Show your working schematic and simulations to the instructor or
+teaching assistant(s) for checkoff. Required simulations and some hints
+and suggestions for setting them up are described below. PSpice
+simulation profiles have been set up for all needed simulations, however
+you may need to edit the schematic to connect different voltage and
+current sources to support the different simulations.</p>
+<h2 id="sec:Transims">Ladder Converter Transient Simulations</h2>
+<p>Use the transient simulation capability in the ADE environment/OrCAD
+PSpice to simulate the startup response of your ladder converter across
+changes in the load current and temperature. Initialize all flying
+capacitors and the output capacitor to 0 V.</p>
+<ul>
+<li><p>Load Currents: Simulate the transient response until the
+converter output reaches steady-state at three load currents (minimum
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>L</mi><mi>D</mi></mrow></msub><annotation encoding="application/x-tex">I_{LD}</annotation></semantics></math>,
+10
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>A,
+and maximum
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>L</mi><mi>D</mi></mrow></msub><annotation encoding="application/x-tex">I_{LD}</annotation></semantics></math>).
+Verify that the DC output voltage error specification is met.</p></li>
+<li><p>Temperatures: Assuming maximum
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>I</mi><mrow><mi>L</mi><mi>D</mi></mrow></msub><annotation encoding="application/x-tex">I_{LD}</annotation></semantics></math>,
+simulate the the transient response until the converter output reaches
+steady-state at three temperatures (0
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mo>∘</mo></msup><annotation encoding="application/x-tex">^{\circ}</annotation></semantics></math>C,
+27
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mo>∘</mo></msup><annotation encoding="application/x-tex">^{\circ}</annotation></semantics></math>C,
+and 85
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mo>∘</mo></msup><annotation encoding="application/x-tex">^{\circ}</annotation></semantics></math>C).
+Verify that the DC output voltage error specification is met.</p></li>
+</ul>
+<p>Plot the results of your transient simulations for checkoff and for
+inclusion in your report. Define the settling time as the time the
+transient requires to settle within
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>±</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">\pm1</annotation></semantics></math>%
+of the final value and verify that the startup transient settling time
+specification is met.</p>
+<h1 id="report">Report</h1>
+<p>Turn in a typewritten report describing your design, your simulation
+testbenches, and the simulated results for the different parameters
+described above. Digital submission via Canvas is required. Include the
+completed summary sheet at the end of this document as the cover page.
+Be sure to include a discussion of why you chose the component values
+and transistor sizes you used (i.e., justify them based on some design
+principle or calculation). Include your schematics for the ladder
+converter, floating drivers, and testbenches as well as all simulation
+plots. Label any interesting features or important points on the plots.
+If your design does not meet any specifications, please explain why you
+think the circuit deviates from how you expected it to work. Be concise:
+only include the amount of text necessary to make your point
+effectively.</p>
+<div class="center">
+<p><strong><span>Project #2 Design Summary</span></strong></p>
+</div>
+<p><span><strong>Name:</strong></span><br />
+<span><strong>Grading:</strong></span></p>
+<div class="center">
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Part</th>
+<th style="text-align: center;">Checkoff</th>
+<th style="text-align: center;">TA Initials</th>
+<th style="text-align: center;">Date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Ladder Converter Schematic</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: left;">Switch Driver Schematics</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="#sec:Transims"
+data-reference-type="ref" data-reference="sec:Transims">1.3</a> Startup
+Transient Waveform Plot (Varying Load Currents)</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="#sec:Transims"
+data-reference-type="ref" data-reference="sec:Transims">1.3</a> Startup
+Transient Waveform Plot (Varying Temperatures)</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><span><strong>Ladder Converter Component Values:</strong></span></p>
+<div class="center">
+<div id="tab:LadderConverter">
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Component</th>
+<th style="text-align: center;">Parameter</th>
+<th style="text-align: center;">Designed Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td rowspan="2"
+style="text-align: center;">SW<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi></mi><mn>0</mn></msub><annotation encoding="application/x-tex">_{0}</annotation></semantics></math></td>
+<td style="text-align: center;">Width
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>m)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">Length
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>m)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td rowspan="2"
+style="text-align: center;">SW<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi></mi><mn>1</mn></msub><annotation encoding="application/x-tex">_{1}</annotation></semantics></math></td>
+<td style="text-align: center;">Width
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>m)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">Length
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>m)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td rowspan="2"
+style="text-align: center;">SW<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi></mi><mn>2</mn></msub><annotation encoding="application/x-tex">_{2}</annotation></semantics></math></td>
+<td style="text-align: center;">Width
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>m)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">Length
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>m)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td rowspan="2"
+style="text-align: center;">SW<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi></mi><mn>3</mn></msub><annotation encoding="application/x-tex">_{3}</annotation></semantics></math></td>
+<td style="text-align: center;">Width
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>m)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">Length
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>m)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td rowspan="2"
+style="text-align: center;">SW<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi></mi><mn>4</mn></msub><annotation encoding="application/x-tex">_{4}</annotation></semantics></math></td>
+<td style="text-align: center;">Width
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>m)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">Length
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>m)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td rowspan="2"
+style="text-align: center;">SW<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi></mi><mn>5</mn></msub><annotation encoding="application/x-tex">_{5}</annotation></semantics></math></td>
+<td style="text-align: center;">Width
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>m)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">Length
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>m)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td colspan="2"
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>1</mn></msub><annotation encoding="application/x-tex">C_{1}</annotation></semantics></math>
+(nF)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td colspan="2"
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>2</mn></msub><annotation encoding="application/x-tex">C_{2}</annotation></semantics></math>
+(nF)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td colspan="2"
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>3</mn></msub><annotation encoding="application/x-tex">C_{3}</annotation></semantics></math>
+(nF)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td colspan="2"
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>o</mi><mi>u</mi><mi>t</mi></mrow></msub><annotation encoding="application/x-tex">C_{out}</annotation></semantics></math>
+(nF)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td colspan="2"
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>f</mi><mrow><mi>s</mi><mi>w</mi></mrow></msub><annotation encoding="application/x-tex">f_{sw}</annotation></semantics></math>
+(Hz)</td>
+<td style="text-align: center;"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><span id="tab:LadderConverter"
+data-label="tab:LadderConverter"></span></p>
+</div>
+<p><span><strong>Floating Driver Values:</strong></span></p>
+<div class="center">
+<div id="tab:SwitchDriver">
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Component</th>
+<th style="text-align: center;">Parameter</th>
+<th style="text-align: center;">Designed Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td rowspan="2"
+style="text-align: center;">SW<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi></mi><mn>0</mn></msub><annotation encoding="application/x-tex">_{0}</annotation></semantics></math>
+Driver Output Stage</td>
+<td style="text-align: center;">Width
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mi>P</mi></msub><annotation encoding="application/x-tex">W_{P}</annotation></semantics></math>
+(nm)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">Width
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mi>N</mi></msub><annotation encoding="application/x-tex">W_{N}</annotation></semantics></math>
+(nm)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td rowspan="2"
+style="text-align: center;">SW<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi></mi><mn>1</mn></msub><annotation encoding="application/x-tex">_{1}</annotation></semantics></math>
+Driver Output Stage</td>
+<td style="text-align: center;">Width
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mi>P</mi></msub><annotation encoding="application/x-tex">W_{P}</annotation></semantics></math>
+(nm)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">Width
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mi>N</mi></msub><annotation encoding="application/x-tex">W_{N}</annotation></semantics></math>
+(nm)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td rowspan="2"
+style="text-align: center;">SW<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi></mi><mn>2</mn></msub><annotation encoding="application/x-tex">_{2}</annotation></semantics></math>
+Driver Output Stage</td>
+<td style="text-align: center;">Width
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mi>P</mi></msub><annotation encoding="application/x-tex">W_{P}</annotation></semantics></math>
+(nm)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">Width
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mi>N</mi></msub><annotation encoding="application/x-tex">W_{N}</annotation></semantics></math>
+(nm)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td rowspan="2"
+style="text-align: center;">SW<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi></mi><mn>3</mn></msub><annotation encoding="application/x-tex">_{3}</annotation></semantics></math>
+Driver Output Stage</td>
+<td style="text-align: center;">Width
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mi>P</mi></msub><annotation encoding="application/x-tex">W_{P}</annotation></semantics></math>
+(nm)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">Width
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mi>N</mi></msub><annotation encoding="application/x-tex">W_{N}</annotation></semantics></math>
+(nm)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td rowspan="2"
+style="text-align: center;">SW<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi></mi><mn>4</mn></msub><annotation encoding="application/x-tex">_{4}</annotation></semantics></math>
+Driver Output Stage</td>
+<td style="text-align: center;">Width
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mi>P</mi></msub><annotation encoding="application/x-tex">W_{P}</annotation></semantics></math>
+(nm)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">Width
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mi>N</mi></msub><annotation encoding="application/x-tex">W_{N}</annotation></semantics></math>
+(nm)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td rowspan="2"
+style="text-align: center;">SW<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi></mi><mn>5</mn></msub><annotation encoding="application/x-tex">_{5}</annotation></semantics></math>
+Driver Output Stage</td>
+<td style="text-align: center;">Width
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mi>P</mi></msub><annotation encoding="application/x-tex">W_{P}</annotation></semantics></math>
+(nm)</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">Width
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mi>N</mi></msub><annotation encoding="application/x-tex">W_{N}</annotation></semantics></math>
+(nm)</td>
+<td style="text-align: center;"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><span id="tab:SwitchDriver" data-label="tab:SwitchDriver"></span></p>
+</div>
+<p><span><strong>Specifications:</strong></span></p>
+<div class="center">
+<div id="tab:specs">
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Parameter</th>
+<th style="text-align: center;">Specification</th>
+<th style="text-align: center;">Simulated Value(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">Output Voltage Error (DC at maximum load
+current)</td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>&lt;</mo><mi>±</mi><mn>100</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">mV</mtext></mrow><annotation encoding="application/x-tex">&lt; \pm100\ \textrm{mV}</annotation></semantics></math></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">Total Flying Capacitance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>t</mi><mi>o</mi><mi>t</mi></mrow></msub><mo>=</mo><msub><mi>C</mi><mn>1</mn></msub><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub><mo>+</mo><msub><mi>C</mi><mn>3</mn></msub></mrow><annotation encoding="application/x-tex">C_{tot} = C_{1} + C_{2} + C_{3}</annotation></semantics></math></td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≤</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">\leq 3</annotation></semantics></math>
+nF</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">Total Power FET (Switch) Gate Area
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mrow><mi>t</mi><mi>o</mi><mi>t</mi></mrow></msub><annotation encoding="application/x-tex">A_{tot}</annotation></semantics></math></td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≤</mo><mn>150</mn><mspace width="0.222em"></mspace><mi>μ</mi><mtext mathvariant="normal">m</mtext><mo>⋅</mo><mn>180</mn><mspace width="0.222em"></mspace><mtext mathvariant="normal">nm</mtext></mrow><annotation encoding="application/x-tex">\leq 150\ \mu\textrm{m}\cdot 180\ \textrm{nm}</annotation></semantics></math></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">Output Capacitance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>O</mi><mi>U</mi><mi>T</mi></mrow></msub><annotation encoding="application/x-tex">C_{OUT}</annotation></semantics></math></td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≤</mo><mn>100</mn></mrow><annotation encoding="application/x-tex">\leq 100</annotation></semantics></math>
+nF</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">Switching Frequency
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>f</mi><mrow><mi>s</mi><mi>w</mi></mrow></msub><annotation encoding="application/x-tex">f_{sw}</annotation></semantics></math></td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≤</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\leq 1</annotation></semantics></math>
+MHz</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: center;">Startup Transient Settling Time</td>
+<td
+style="text-align: center;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>&lt;</mo><mn>300</mn><mspace width="0.222em"></mspace><mi>μ</mi><mtext mathvariant="normal">s</mtext></mrow><annotation encoding="application/x-tex">&lt; 300\ \mu\textrm{s}</annotation></semantics></math></td>
+<td style="text-align: center;"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><span id="tab:specs" data-label="tab:specs"></span></p>
+</div>
+</body>
+</html>
